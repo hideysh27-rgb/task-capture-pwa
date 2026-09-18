@@ -6,7 +6,7 @@
  *  - 中身を書き換えたら CACHE_NAME の番号を上げる。上げ忘れると端末が古いまま止まる。
  */
 
-var CACHE_NAME = 'task-capture-v1';
+var CACHE_NAME = 'task-capture-v2';
 
 var SHELL = [
   './',

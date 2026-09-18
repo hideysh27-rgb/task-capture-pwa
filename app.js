@@ -32,25 +32,64 @@ function loadConfig() {
   } catch (e) { return null; }
 }
 
+/**
+ * 接続設定の画面。初回だけでなく、あとから開き直して直せるようにしてある。
+ * （打ち間違えたときに直す手段が無いと詰むため）
+ */
 function showSetup() {
+  var urlEl = document.getElementById('setup-url');
+  var tokenEl = document.getElementById('setup-token');
+  var result = document.getElementById('setup-result');
+  var cancel = document.getElementById('setup-cancel');
+
+  if (config) { urlEl.value = config.url; tokenEl.value = config.token; }
+  result.textContent = '';
+  cancel.classList.toggle('hidden', !config);
+
+  hide('app');
   show('setup');
-  document.getElementById('setup-save').addEventListener('click', function () {
-    var url = document.getElementById('setup-url').value.trim();
-    var token = document.getElementById('setup-token').value.trim();
-    if (!url || !token) { toast('URLと合言葉の両方が必要です'); return; }
-    config = { url: url, token: token };
+
+  function read() {
+    return { url: urlEl.value.trim(), token: tokenEl.value.trim() };
+  }
+
+  // 保存する前に試せるようにする。ここで弾ければ、後から「未送信」で悩まずに済む
+  document.getElementById('setup-test').onclick = function () {
+    var c = read();
+    if (!c.url || !c.token) { result.textContent = 'URLと合言葉の両方を入れてください'; return; }
+    result.textContent = '確認中...';
+    api('list_today', null, c)
+      .then(function (d) { result.textContent = '✓ つながりました（今日のタスク ' + d.items.length + '件）'; })
+      .catch(function (e) { result.textContent = '✗ ' + e.message; });
+  };
+
+  document.getElementById('setup-save').onclick = function () {
+    var c = read();
+    if (!c.url || !c.token) { result.textContent = 'URLと合言葉の両方を入れてください'; return; }
+    config = c;
     localStorage.setItem(CFG_KEY, JSON.stringify(config));
     hide('setup');
     startApp();
-  });
+  };
+
+  cancel.onclick = function () { hide('setup'); show('app'); };
 }
+
+var wired = false;
 
 function startApp() {
   hide('setup');
   show('app');
+
+  // 設定を保存し直すたびにここを通るので、イベント登録は1回だけにする
+  // （二重登録すると送信が2回走る）
+  if (wired) { flushQueue(); refreshInboxBadge(); focusCapture(); return; }
+  wired = true;
+
   bindTabs();
   bindChips();
   bindCapture();
+  document.getElementById('open-settings').onclick = showSetup;
 
   flushQueue();                                  // 前回オフラインで積んだ分を先に流す
   window.addEventListener('online', flushQueue);
@@ -69,18 +108,54 @@ function startApp() {
  * GAS へは text/plain で送る。application/json にするとプリフライト（OPTIONS）が飛び、
  * GAS がそれに応えられないので CORS で落ちる。ここは変えないこと。
  */
-function api(action, payload) {
-  var body = Object.assign({ token: config.token, action: action }, payload || {});
-  return fetch(config.url, {
+function api(action, payload, cfg) {
+  cfg = cfg || config;
+  var body = Object.assign({ token: cfg.token, action: action }, payload || {});
+
+  return fetch(cfg.url, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(body)
-  }).then(function (res) {
-    return res.json();
-  }).then(function (data) {
-    if (!data.ok) throw new Error(data.error || '不明なエラー');
+  }).then(
+    function (res) {
+      return res.text().then(function (t) {
+        try {
+          return JSON.parse(t);
+        } catch (e) {
+          // JSONでない＝Googleのエラーページ等。URLの間違いか未承認がほとんど
+          throw serverError(res.status === 200
+            ? 'サーバーの応答が不正です。URLを確認してください'
+            : 'サーバーが ' + res.status + ' を返しました');
+        }
+      });
+    },
+    function () {
+      // fetch 自体が失敗＝本当に繋がっていない
+      throw networkError();
+    }
+  ).then(function (data) {
+    if (!data.ok) {
+      throw serverError(data.error === 'forbidden'
+        ? '合言葉(APP_TOKEN)が違います'
+        : (data.error || '不明なエラー'));
+    }
     return data;
   });
+}
+
+/* ネットワーク断と、サーバーに届いた上での失敗を区別する。
+   ここを一緒くたにすると、合言葉の打ち間違いが「圏外」と表示されて
+   原因にたどり着けなくなる（実際に起きた）。 */
+function networkError() {
+  var e = new Error('通信できませんでした');
+  e.network = true;
+  return e;
+}
+
+function serverError(msg) {
+  var e = new Error(msg);
+  e.server = true;
+  return e;
 }
 
 // ── 捕獲 ────────────────────────────────────────────────
@@ -109,9 +184,16 @@ function send() {
   api('create', item).then(function () {
     toast('登録しました');
     refreshInboxBadge();
-  }).catch(function () {
-    enqueue(item);
-    toast('圏外のため保存しました（後で自動送信）');
+  }).catch(function (e) {
+    if (e.network) {
+      enqueue(item);
+      toast('圏外のため保存しました（後で自動送信）');
+      return;
+    }
+    // サーバーには届いたが断られた。積んでも次回また断られるだけなので、
+    // 入力を画面に戻して原因を出す
+    el.value = text;
+    toast('送れません: ' + e.message);
   });
 }
 
@@ -171,8 +253,11 @@ function flushQueue() {
       rest.shift();
       localStorage.setItem(QUEUE_KEY, JSON.stringify(rest));
       step();
-    }).catch(function () {
-      renderQueueNote();  // まだ繋がらない。次の online イベントで再挑戦する
+    }).catch(function (e) {
+      renderQueueNote();
+      if (e.network) return;  // まだ繋がらない。次の online イベントで再挑戦する
+      // 設定が違う等、繰り返しても直らない失敗。黙って溜め続けず原因を出す
+      toast('未送信を送れません: ' + e.message);
     });
   }
   step();

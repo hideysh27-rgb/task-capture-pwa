@@ -27,7 +27,10 @@
   <label>APP_TOKEN
     <input id="setup-token" type="text" placeholder="スクリプトプロパティに入れた合言葉" autocomplete="off">
   </label>
+  <button id="setup-test">接続を試す</button>
   <button id="setup-save" class="primary">保存して始める</button>
+  <button id="setup-cancel" class="hidden">やめる</button>
+  <p class="note" id="setup-result"></p>
 </section>
 
 <main id="app" class="hidden">
@@ -54,6 +57,7 @@
 
     <button id="capture-send" class="primary big">送信</button>
     <p class="note" id="queue-note"></p>
+    <p class="note"><button id="open-settings" class="linklike">接続設定を変更</button></p>
   </section>
 
   <!-- ② 今日: 期限3日以内＋作業中。行をタップすると完了 -->

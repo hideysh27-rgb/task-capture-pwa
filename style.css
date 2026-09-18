@@ -203,3 +203,14 @@ button {
 }
 
 #toast button { background: none; color: var(--accent); font-weight: 600; padding: 4px 8px; }
+
+/* 本文中に置く控えめなボタン（接続設定を開く等） */
+.linklike {
+  background: none;
+  color: var(--accent);
+  padding: 4px 0;
+  font-size: 0.85rem;
+  text-decoration: underline;
+}
+
+#setup-test, #setup-cancel { width: 100%; margin-top: 8px; }
