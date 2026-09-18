@@ -1,0 +1,205 @@
+/* タスク捕獲PWA — スマホ片手操作を前提にした最小のスタイル。
+   狙いは「速く打てる・押し間違えない」の2点だけ。装飾は増やさない。 */
+
+:root {
+  --bg: #111827;
+  --panel: #1f2937;
+  --line: #374151;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #3b82f6;
+  --ok: #22c55e;
+  --ng: #ef4444;
+  --warn: #f59e0b;
+  --tabbar: 56px;
+  /* iPhone のホームバー分の余白。これが無いと最下段のボタンが押しにくい */
+  --safe: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  font-size: 16px; /* iOS が入力欄で勝手にズームするのを防ぐ最低ライン */
+  line-height: 1.5;
+}
+
+.hidden { display: none !important; }
+
+.screen {
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--tabbar) + var(--safe) + 24px);
+}
+
+h1 { font-size: 1.25rem; margin: 0 0 12px; }
+.note { color: var(--muted); font-size: 0.85rem; margin: 8px 0; }
+.empty { color: var(--muted); text-align: center; margin-top: 48px; }
+
+/* ── 入力 ───────────────────────────────── */
+
+textarea, input[type="text"], input[type="url"], input[type="date"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+textarea { resize: none; }
+
+label { display: block; margin: 12px 0; color: var(--muted); font-size: 0.85rem; }
+label input { margin-top: 6px; }
+
+button {
+  font-family: inherit;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--panel);
+  padding: 10px 14px;
+}
+
+.primary { background: var(--accent); width: 100%; margin-top: 12px; font-weight: 600; }
+/* 送信は親指が届く位置で、狙わなくても押せる大きさにする */
+.big { padding: 16px; font-size: 1.05rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { border: 1px solid var(--line); padding: 8px 14px; color: var(--muted); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── 一覧 ───────────────────────────────── */
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.card .title { font-size: 1rem; word-break: break-word; }
+.card .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; font-size: 0.75rem; color: var(--muted); }
+.card .meta .due-over { color: var(--ng); font-weight: 600; }
+.card .meta .due-soon { color: var(--warn); }
+.card .excerpt { margin-top: 8px; font-size: 0.8rem; color: var(--muted); }
+.card a { color: var(--accent); font-size: 0.8rem; }
+
+/* 「今日」のカード。本文タップ＝完了 なので、他のボタンは「…」の中に隠す */
+.card-head { display: flex; align-items: flex-start; gap: 8px; }
+.card-body { flex: 1; min-width: 0; }
+
+.more {
+  background: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 4px 8px;
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.actions button { flex: 1; padding: 10px 0; font-size: 0.85rem; }
+.actions button:disabled { opacity: 0.3; }
+.actions .pri-高 { color: var(--ng); }
+.actions .pri-中 { color: var(--warn); }
+.actions .pri-低 { color: var(--muted); }
+.actions .danger { color: var(--ng); }
+
+/* AIが集めてきた補足。本文と混ざらないよう左に線を引いて区別する */
+.enrich {
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--accent);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.enrich-mark {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.7rem;
+}
+
+.enrich.warn { border-left-color: var(--warn); }
+
+/* 受信箱の判定ボタン。3つとも同じ幅で、見ないでも押せるように並び順を固定する */
+.verdicts { display: flex; gap: 8px; margin-top: 10px; }
+.verdicts button { flex: 1; padding: 12px 0; font-weight: 600; }
+.v-ok { background: rgba(34, 197, 94, 0.15); color: var(--ok); }
+.v-ng { background: rgba(239, 68, 68, 0.15); color: var(--ng); }
+.v-fix { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+
+.editor { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.editor .row { display: flex; gap: 8px; }
+.editor .row > * { flex: 1; }
+
+/* ── タブバー ───────────────────────────── */
+
+#tabs {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding-bottom: var(--safe);
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border-radius: 0;
+  color: var(--muted);
+  height: var(--tabbar);
+  position: relative;
+}
+
+.tab.active { color: var(--text); box-shadow: inset 0 2px 0 var(--accent); }
+
+.badge {
+  display: inline-block;
+  min-width: 18px;
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--ng);
+  color: #fff;
+  font-size: 0.7rem;
+}
+
+/* ── トースト ───────────────────────────── */
+
+#toast {
+  position: fixed;
+  left: 16px; right: 16px;
+  bottom: calc(var(--tabbar) + var(--safe) + 16px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+}
+
+#toast button { background: none; color: var(--accent); font-weight: 600; padding: 4px 8px; }

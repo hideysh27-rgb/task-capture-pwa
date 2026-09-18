@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>タスク捕獲</title>
+
+<!-- iPhone のホーム画面から「アプリとして」起動するための指定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="タスク">
+<meta name="theme-color" content="#1f2937">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 初回だけ出る設定画面。ここで入れた値は端末の localStorage にだけ残る。
+     ソースにはURLもトークンも書かないので、公開リポジトリに置いても中身は漏れない。 -->
+<section id="setup" class="screen hidden">
+  <h1>初期設定</h1>
+  <p class="note">GASウェブアプリのURLと合言葉を入れてください。この端末にだけ保存されます。</p>
+  <label>GAS ウェブアプリURL
+    <input id="setup-url" type="url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+  </label>
+  <label>APP_TOKEN
+    <input id="setup-token" type="text" placeholder="スクリプトプロパティに入れた合言葉" autocomplete="off">
+  </label>
+  <button id="setup-save" class="primary">保存して始める</button>
+</section>
+
+<main id="app" class="hidden">
+
+  <!-- ① 捕獲: 起動直後にここが出る。入力欄は自動でフォーカスされる -->
+  <section id="tab-capture" class="screen">
+    <textarea id="capture-text" placeholder="思いついたことをそのまま" rows="3"
+              enterkeyhint="send" autocomplete="off" autocapitalize="off"></textarea>
+
+    <div class="chips" id="due-chips" data-group="due">
+      <button type="button" class="chip" data-value="today">今日</button>
+      <button type="button" class="chip" data-value="tomorrow">明日</button>
+      <button type="button" class="chip" data-value="weekend">今週末</button>
+    </div>
+
+    <div class="chips" id="area-chips" data-group="area">
+      <button type="button" class="chip" data-value="就活">就活</button>
+      <button type="button" class="chip" data-value="VEXUM">VEXUM</button>
+      <button type="button" class="chip" data-value="Creare">Creare</button>
+      <button type="button" class="chip" data-value="教職">教職</button>
+      <button type="button" class="chip" data-value="大学">大学</button>
+      <button type="button" class="chip" data-value="自分">自分</button>
+    </div>
+
+    <button id="capture-send" class="primary big">送信</button>
+    <p class="note" id="queue-note"></p>
+  </section>
+
+  <!-- ② 今日: 期限3日以内＋作業中。行をタップすると完了 -->
+  <section id="tab-today" class="screen hidden">
+    <div class="list" id="today-list"></div>
+    <p class="empty hidden" id="today-empty">直近3日の締切はありません</p>
+  </section>
+
+  <!-- ③ 受信箱: AIが入れた未判定のタスク。ここでの1タップが学習データになる -->
+  <section id="tab-inbox" class="screen hidden">
+    <div class="list" id="inbox-list"></div>
+    <p class="empty hidden" id="inbox-empty">未判定のタスクはありません</p>
+  </section>
+
+  <nav id="tabs">
+    <button class="tab active" data-tab="capture">捕獲</button>
+    <button class="tab" data-tab="today">今日</button>
+    <button class="tab" data-tab="inbox">受信箱<span id="inbox-badge" class="badge hidden"></span></button>
+  </nav>
+</main>
+
+<div id="toast" class="hidden"><span id="toast-text"></span><button id="toast-action" class="hidden"></button></div>
+
+<script src="app.js"></script>
+</body>
+</html>
