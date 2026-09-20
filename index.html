@@ -11,8 +11,8 @@
 <meta name="apple-mobile-web-app-title" content="タスク">
 <meta name="theme-color" content="#1f2937">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="manifest" href="manifest.json?v=3">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="manifest" href="manifest.json?v=4">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -60,10 +60,10 @@
     <p class="note"><button id="open-settings" class="linklike">接続設定を変更</button></p>
   </section>
 
-  <!-- ② 今日: 期限3日以内＋作業中。行をタップすると完了 -->
+  <!-- ② 一覧: 未完了すべて。行をタップすると完了 -->
   <section id="tab-today" class="screen hidden">
     <div class="list" id="today-list"></div>
-    <p class="empty hidden" id="today-empty">直近3日の締切はありません</p>
+    <p class="empty hidden" id="today-empty">タスクはありません</p>
   </section>
 
   <!-- ③ 受信箱: AIが入れた未判定のタスク。ここでの1タップが学習データになる -->
@@ -74,13 +74,13 @@
 
   <nav id="tabs">
     <button class="tab active" data-tab="capture">捕獲</button>
-    <button class="tab" data-tab="today">今日</button>
+    <button class="tab" data-tab="today">一覧</button>
     <button class="tab" data-tab="inbox">受信箱<span id="inbox-badge" class="badge hidden"></span></button>
   </nav>
 </main>
 
 <div id="toast" class="hidden"><span id="toast-text"></span><button id="toast-action" class="hidden"></button></div>
 
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

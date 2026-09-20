@@ -14,7 +14,7 @@
  *   ちぐはぐな状態になり、原因の特定に時間を取られた。URLを変えれば確実に取り直される。
  */
 
-var VERSION = 3;
+var VERSION = 4;
 var CACHE_NAME = 'task-capture-v' + VERSION;
 
 var SHELL = [
